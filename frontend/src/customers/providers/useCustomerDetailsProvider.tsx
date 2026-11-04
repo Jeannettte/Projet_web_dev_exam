@@ -1,47 +1,51 @@
 import axios from "axios";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type {
-  CreateCustomerModel,
   CustomerModel,
-  CustomersPageModel,
+  UpdateCustomerModel,
 } from "../models/CustomerModel";
+import type { PurchaseModel } from "../models/PurchaseModel";
 
 const CUSTOMERS_URL = "http://localhost:3000/customers";
 
-export const useCustomersProvider = () => {
-  const [customers, setCustomers] = useState<CustomerModel[]>([]);
-  const [totalCount, setTotalCount] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  // Only the latest request may update the state (avoids out-of-order responses)
-  const lastRequestId = useRef(0);
+export const useCustomerDetailsProvider = (customerId: string) => {
+  const [customer, setCustomer] = useState<CustomerModel | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [purchases, setPurchases] = useState<PurchaseModel[]>([]);
+  const [isPurchasesLoading, setIsPurchasesLoading] = useState<boolean>(true);
 
-  const load = (page: number, limit: number) => {
-    const requestId = ++lastRequestId.current;
+  const load = () => {
     setIsLoading(true);
     return axios
-      .get<CustomersPageModel>(CUSTOMERS_URL, { params: { page, limit } })
-      .then((result) => {
-        if (requestId !== lastRequestId.current) return;
-        setCustomers(result.data.customers);
-        setTotalCount(result.data.totalCount);
-      })
-      .finally(() => {
-        if (requestId === lastRequestId.current) setIsLoading(false);
-      });
+      .get<CustomerModel>(`${CUSTOMERS_URL}/${customerId}`)
+      .then((result) => setCustomer(result.data))
+      // 404 or network error: the page shows "Customer not found"
+      .catch(() => setCustomer(null))
+      .finally(() => setIsLoading(false));
   };
 
+  const loadPurchases = () => {
+    setIsPurchasesLoading(true);
+    return axios
+      .get<PurchaseModel[]>(`${CUSTOMERS_URL}/${customerId}/bikes`)
+      .then((result) => setPurchases(result.data))
+      .catch(() => setPurchases([]))
+      .finally(() => setIsPurchasesLoading(false));
+  };
 
-  const deleteCustomer = (id: string) =>
-    axios.delete(`${CUSTOMERS_URL}/${id}`).then(() => undefined);
-
-  const createCustomer = (input: CreateCustomerModel) =>
-    axios.post<CustomerModel>(CUSTOMERS_URL, input).then(() => undefined);
+  // Rejects on failure so the edit form stays open
+  const updateCustomer = (input: UpdateCustomerModel) =>
+    axios
+      .patch<CustomerModel>(`${CUSTOMERS_URL}/${customerId}`, input)
+      .then((result) => setCustomer(result.data));
 
   return {
-    customers,
-    totalCount,
-    load,
+    customer,
     isLoading,
-    createCustomer,
+    load,
+    updateCustomer,
+    purchases,
+    isPurchasesLoading,
+    loadPurchases,
   };
 };

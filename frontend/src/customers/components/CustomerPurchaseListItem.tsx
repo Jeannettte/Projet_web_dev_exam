@@ -3,6 +3,7 @@ import {
   ShoppingOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
+import { Link } from "@tanstack/react-router";
 import { Col, Skeleton, Space } from "antd";
 import { ListItem } from "../../shared/components/ListItem";
 import type { PurchaseModel } from "../models/PurchaseModel";
@@ -33,7 +34,12 @@ export const CustomerPurchaseListItem = ({
           <ShoppingOutlined />
           {purchase ? (
             <>
-              {`${purchase.bike.brand} ${purchase.bike.model}`}
+              {/* The bike name links to its detail page (/bikes/<id>).
+                  The link can never point to a deleted bike: a bike linked
+                  to a sale cannot be deleted (409). */}
+              <Link to="/bikes/$bikeId" params={{ bikeId: purchase.bikeId }}>
+                {`${purchase.bike.brand} ${purchase.bike.model}`}
+              </Link>
               {purchase.bike.electric && (
                 <ThunderboltOutlined aria-label="Electric" />
               )}

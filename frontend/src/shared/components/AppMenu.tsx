@@ -1,4 +1,8 @@
-import { ContactsOutlined, HomeOutlined } from "@ant-design/icons";
+import {
+  ContactsOutlined,
+  HomeOutlined,
+  ToolOutlined,
+} from "@ant-design/icons";
 import { Link, useLocation } from "@tanstack/react-router";
 import type { MenuProps } from "antd";
 import { Menu } from "antd";
@@ -18,9 +22,16 @@ const items: MenuItem[] = [
     key: "customers",
     icon: <ContactsOutlined />,
   },
+  // New entry: access to the bike catalogue
+  {
+    label: <Link to="/bikes">Bikes</Link>,
+    key: "bikes",
+    icon: <ToolOutlined />,
+  },
 ];
 
-// The first URL segment tells which section we are in: "/customers/123" → "customers"
+// The first URL segment tells which section we are in:
+// "/customers/123" -> "customers", "/bikes/123" -> "bikes"
 const getSelectedKey = (pathname: string) => pathname.split("/")[1] || "home";
 
 export function AppMenu() {

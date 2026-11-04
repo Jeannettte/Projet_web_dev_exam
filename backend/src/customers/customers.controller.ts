@@ -11,6 +11,7 @@ import {
   Post,
   Query,
 } from "@nestjs/common";
+import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
 import { CustomersService } from "./customers.service";
 import {
   BikeSellResponseDto,
@@ -18,51 +19,27 @@ import {
 } from "./dto/bike-sell-response.dto";
 import { CreateBikeSellDto } from "./dto/create-bike-sell.dto";
 import { CreateCustomerDto } from "./dto/create-customer.dto";
-import { CustomerResponseDto, CustomersPageResponseDto } from "./dto/customer-response.dto";
+import {
+  CustomerResponseDto,
+  CustomersPageResponseDto,
+} from "./dto/customer-response.dto";
 import { UpdateCustomerDto } from "./dto/update-customer.dto";
 import type {
   CreateCustomerModel,
   UpdateCustomerModel,
 } from "./models/customer.model";
-import {Transform } from "class-transformer";
-import { IsInt, IsOptional, Min } from "class-validator";
 
-//compliance with instructions 
-const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 10;
-const MAX_LIMIT = 50;
-
-
-const toStrictInteger = ({value}:{value: unknown}) : unknown =>
-  typeof value ==="string" && /^\d+$/.test(value) &&
-  Number(value) <= Number.MAX_SAFE_INTEGER
-    ? Number(value)
-    : value;
-
-    // DTO for query parameters of the list customers endpoint
-    // @IsInt () and @Min(1) decorators ensure that the page and limit values are valid integers greater than or equal to 1
-
-class ListCustomersQueryDto {  
-  @Transform(toStrictInteger)
-  @IsInt()
-  @Min(1)
-  page:number = DEFAULT_PAGE;
-
-  @Transform(toStrictInteger)
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  limit: number = DEFAULT_LIMIT;
-}
+@Controller("customers")
 export class CustomersController {
   constructor(
     @Inject(CustomersService) private readonly service: CustomersService,
   ) {}
 
-  // Endpoint to retrieve a paginated list of customers
-  // The @Query() decorator is used to extract the query parameters from the request and map them to the ListCustomersQueryDto class
+  // Paginated list: page/limit are validated by PaginationQueryDto (400 if invalid)
   @Get()
-  async findAll( @Query() query: ListCustomersQueryDto): Promise<CustomersPageResponseDto> {
+  async findAll(
+    @Query() query: PaginationQueryDto,
+  ): Promise<CustomersPageResponseDto> {
     return CustomersPageResponseDto.fromModel(
       await this.service.findAll(query.page, query.limit),
     );
