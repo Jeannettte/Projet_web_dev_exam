@@ -8,7 +8,7 @@ I completed both exercises on the existing NestJS API and React app:
 2. **Exercise 2**: bike catalogue management (CRUD API and UI).
 
 I followed the existing conventions of the `customers` module, added no new
-dependency, and kept the existing features working.
+dependency and kept the existing features working.
 
 ## Approach
 
@@ -18,9 +18,9 @@ dependency, and kept the existing features working.
   `PaginationQueryDto` (`src/common/dto/pagination-query.dto.ts`), used by both
   `GET /customers` and `GET /bikes`. Rules: integers >= 1, `page` defaults to 1,
   `limit` defaults to 10 and is capped at 50. Anything else returns a 400.
-  Non-numeric strings are not converted, so `@IsInt()` rejects them.
+  Non-numeric strings are not converted so `@IsInt()` rejects them.
 - **Database-level pagination.** The repositories use `findAndCount` with
-  `skip`/`take` and a stable ordering (the id is the last sort criterion), so
+  `skip`/`take` and a stable ordering (the id is the last sort criterion) so
   nothing is loaded and split in memory. A page beyond the last one returns an
   empty list with the correct `totalCount`.
 - **Bikes module.** I used the same layers as `customers`: controller, service,
@@ -32,21 +32,21 @@ dependency, and kept the existing features working.
   - 404: unknown bike (read, update, delete).
   - 400: invalid body or query, invalid UUID, empty PATCH body.
   - 409: deleting a bike that is linked to a sale. The repository checks for
-    sales explicitly, and also catches the foreign key error as a safety net
+    sales explicitly and also catches the foreign key error as a safety net
     (the relation is `ON DELETE RESTRICT`). The service turns this business
     error into an HTTP 409, so the sales history is always preserved.
 
 ### Frontend
 
 - **Customers list.** Pagination uses Ant Design's `Pagination`. `page` and
-  `limit` are stored in the URL (`?page=2&limit=10`), so reloading and the back
+  `limit` are stored in the URL (`?page=2&limit=10`) so reloading and the back
   button keep the current page. Invalid values fall back to defaults before any
   request is sent. If the current page becomes empty (for example after a
   deletion), the list goes back to the last page.
 - **Bikes UI.** A new `bikes/` folder mirrors the structure of `customers/`
   (components, models, pages, providers) with its two routes `/bikes` and
   `/bikes/:bikeId`. It provides the paginated catalogue, the detail page, add and
-  edit (one shared form modal, so no duplicated code), and deletion with a
+  edit (one shared form modal, so no duplicated code) and deletion with a
   confirmation modal. A 409 keeps the modal open with an explanatory message.
 - **Navigation.** A "Bikes" entry was added to the menu. In a customer's
   purchases, the bike name links to its detail page.
